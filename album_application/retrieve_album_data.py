@@ -9,7 +9,7 @@ workbook = openpyxl.Workbook()
 sheet1 = workbook.create_sheet("Genre statistics")
 sheet2 = workbook.create_sheet("Number of tags distribution")
 
-def get_data_for_genres(genres):
+def get_data_for_genres(genres, check_for_album_covers):
     mb.set_useragent("test", "0.7.1")
 
     if len(sys.argv) < 2:
@@ -50,14 +50,10 @@ def get_data_for_genres(genres):
         search_tag_containing_list = []
 
         while 0 < num_of_covers:
-            # print("starting search")
             result = mb.search_release_groups(query='', limit=100, offset=offset, primarytype="Album", tag=search_tag)
-            # print("retrieved from db")
-
             covers = result["release-group-list"]
-            # print("len of covers:", len(covers))
+            
             for album in covers:
-                # top_tag = max(album["tag-list"], key=lambda x:x["count"])
 
                 top_separated_tags = dict()
 
@@ -72,40 +68,21 @@ def get_data_for_genres(genres):
                 tags_containing_search_tag_album = 0
 
                 for tag in album["tag-list"]:
-                    # print("stuckhere2?")
                     if int(tag["count"]) < 1:
-                        continue                    
-                    tags_in_album += int(tag["count"])
+                        continue    
 
-                    # print(search_tag, ":", tag["name"])
+                    tags_in_album += int(tag["count"])
 
                     if search_tag == tag["name"]:
                         search_tag_in_album += int(tag["count"])
 
                     if search_tag in tag["name"]:
-                        # print("entered tag comparison")
-                        # print("count:", tag["count"])
                         tags_containing_search_tag_album += int(tag["count"])
-
-                    # if tag["name"] == search_tag:
-                    #     s_tag_count = int(tag["count"])
-                    #     if s_tag_count < 1:
-                    #         break
-
-                    #     is_search_tag_in_album = True
-                    #     # print("setting is_search_tag_in_album to True, s_tag_count is:", s_tag_count)
-                    #     search_tag_in_album += s_tag_count
-
-                    #     if len(search_tag_list) < s_tag_count:
-                    #         amount_to_append = s_tag_count - len(search_tag_list)
-                    #         search_tag_list.extend([0] * amount_to_append)
-
-                    #     search_tag_list[s_tag_count - 1] += 1
-
 
                 if tags_in_album and tag_ratio < (tags_containing_search_tag_album / tags_in_album):
                     try:
-                        # mb.get_release_group_image_list(album["id"])
+                        if check_for_album_covers:
+                            mb.get_release_group_image_list(album["id"])
 
                         prog_bar.next()
                         total_tag_count += tags_in_album
@@ -133,39 +110,27 @@ def get_data_for_genres(genres):
 
             last_count = len(collected_albums)
 
-        # if (len(sheet["1"]) - 8 < len(search_tag_list)):
-        #     cols_to_append = len(search_tag_list) - (len(sheet["1"]) - 8)
-        #     sheet.insert_cols(len(sheet["1"]) - 6, cols_to_append)
-
         if (len(sheet2["1"]) - 8 < len(search_tag_containing_list)):
             cols_to_append = len(search_tag_containing_list) - (len(sheet2["1"]) - 8)
             sheet2.insert_cols(len(sheet2["1"]) - 6, cols_to_append)
 
-        sheet1["A" + str(current_row_excel)] = genres[i]
-        sheet2["A" + str(current_row_excel)] = genres[i]
-
-        # for j in range(0, len(search_tag_list)):
-        #     sheet.cell(current_row_excel, 2 + j).value = str(search_tag_list[j])
+        sheet1.cell(current_row_excel, 1).value = genres[i]
+        sheet2.cell(current_row_excel, 1).value = genres[i]
 
         for j in range(0, len(search_tag_containing_list)):
-            sheet2.cell(current_row_excel, 2 + j).value = str(search_tag_containing_list[j])
-
-        # for j in range(0, len(search_tag_containing_list)):
-        #     sheet2[chr(ord("B") + j) + str(current_row_excel)] = str(search_tag_containing_list[j])
+            sheet2.cell(current_row_excel, 2 + j).value = search_tag_containing_list[j]
+            # sheet2.cell(current_row_excel, 2 + j).number_format = "General"
 
         total_num_covers = len(collected_albums)
 
-        # print("total albums: ", total_num_covers)
-        # print("search tag containing list:", search_tag_containing_list)
-
         genre_data = [
-            {"total albums": str(total_num_covers)},
-            {"total tags in album": str(total_tag_count)},
-            {"AVG tags per album": str(total_tag_count/total_num_covers)},
-            {"total search tags in albums": str(search_tag_count)},
-            {"AVG search tags per album": str(search_tag_count/total_num_covers)},
-            {"total tags containing search tag in albums": str(total_search_tag_in_tag)},
-            {"AVG tags containing search tag in album": str(total_search_tag_in_tag/total_num_covers)}
+            {"total albums": total_num_covers},
+            {"total tags in album": total_tag_count},
+            {"AVG tags per album": total_tag_count/total_num_covers},
+            {"total search tags in albums": search_tag_count},
+            {"AVG search tags per album": search_tag_count/total_num_covers},
+            {"total tags containing search tag in albums": total_search_tag_in_tag},
+            {"AVG tags containing search tag in album": total_search_tag_in_tag/total_num_covers}
         ]
 
         excel_table.add_genre_stats_to_sheet(sheet1, genre_data, current_row_excel)
@@ -174,17 +139,19 @@ def get_data_for_genres(genres):
 
 
 if __name__ == "__main__":
-    excel_table.init_sheet_titles(sheet1)
-    
+    excel_table.init_stats_sheet_titles(sheet1)
+
     try:
         config_file = open("data_config.json", "r")
+        config: dict = json.load(config_file)
 
     except IOError as e:
         print(e)
         exit(-1)
 
-    genres = json.load(config_file)["album_genres"]
+    genres = config["album_genres"]
 
-    get_data_for_genres(genres)
+    get_data_for_genres(genres, config["check_for_album_covers"])
+    excel_table.add_titles_distribution_sheet(sheet2)
 
     workbook.save("./excel_files/genre_data.xlsx")
