@@ -1,4 +1,6 @@
 {
+  "minimal_tag_ratio": 0.5,
+  "iterations_not_found_albums": 10,
   "check_for_album_covers": false,
   "album_genres": 
   [
@@ -16,6 +18,15 @@
     "latin",
     "country",
     "reggae",
-    "schlager"
+    "schlager",
+    "indie",
+    "funk",
+    "ska",
+    "hip-hop",
+    "R&B",
+    "dancehall",
+    "alternative",
+    "edm",
+    "urban"
   ]
 }
