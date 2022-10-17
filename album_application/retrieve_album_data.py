@@ -139,11 +139,26 @@ def get_data_for_genres(genres, check_for_album_covers):
 
                     if "artist-credit-phrase" in album:
                         artist_letter = album["artist-credit-phrase"][0]
-                        add_to_distribution(artist_letter, first_char_artist_distr_dict)
+
+                        if ord(artist_letter) in range(65, 91) or ord(artist_letter) in range(97, 123):
+
+                            if ord(artist_letter) in range(97, 123):
+                                artist_letter = chr(ord(artist_letter) - 32)
+                            add_to_distribution(artist_letter, first_char_artist_distr_dict)
+                        else:
+                            add_to_distribution("other", first_char_artist_distr_dict)
 
                     if "title" in album:
                         title_letter = album["title"][0]
-                        add_to_distribution(title_letter, first_char_title_distr_dict)
+
+                        if ord(title_letter) in range(65, 91) or ord(title_letter) in range(97, 123):
+
+                            if ord(title_letter) in range(97, 123):
+                                title_letter = chr(ord(title_letter) - 32)
+
+                            add_to_distribution(title_letter, first_char_title_distr_dict)
+                        else:
+                            add_to_distribution("other", first_char_title_distr_dict)
                     
 
                     # print("setting search_tag_containing_list")
@@ -233,4 +248,4 @@ if __name__ == "__main__":
     get_data_for_genres(genres, CONFIG["check_for_album_covers"])
     excel_table.add_titles_distribution_sheet(distr_sheet)
 
-    workbook.save("./excel_files/genre_data_1000_50%.xlsx")
+    workbook.save("./excel_files/genre_data_selected_genres_1000_50%.xlsx")

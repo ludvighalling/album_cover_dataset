@@ -8,25 +8,11 @@
     "pop", 
     "jazz",
     "punk",
-    "classical",
     "house",
     "metal",
-    "folk",
     "blues",
     "trance",
-    "soul",
-    "latin",
     "country",
-    "reggae",
-    "schlager",
-    "indie",
-    "funk",
-    "ska",
-    "hip-hop",
-    "R&B",
-    "dancehall",
-    "alternative",
-    "edm",
-    "urban"
+    "reggae"
   ]
 }
